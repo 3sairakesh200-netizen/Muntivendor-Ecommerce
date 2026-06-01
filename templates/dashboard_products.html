@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Products - Lumio{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- Left Sidebar Menu -->
+    <aside class="lg:col-span-3 bg-cardBg border border-white/5 rounded-2xl p-5 space-y-4">
+        <div class="text-center pb-4 border-b border-white/5">
+            <img src="{{ user.vendor_profile.logo_url|default:'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&h=400&q=80' }}" 
+                 alt="" class="w-16 h-16 rounded-2xl object-cover border-2 border-brandPurple mx-auto mb-3">
+            <h4 class="font-extrabold text-white text-base leading-tight">{{ user.vendor_profile.store_name }}</h4>
+            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-[8px] font-black uppercase tracking-wider mt-1.5">
+                <i data-lucide="shield-check" class="w-2.5 h-2.5"></i> APPROVED SELLER
+            </span>
+        </div>
+
+        <nav class="flex flex-col gap-1">
+            <a href="{% url 'dashboard_home' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Analytics Dashboard
+            </a>
+            <a href="{% url 'dashboard_products' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left bg-brandPurple text-white shadow-neon">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-brandCyan"></i> My Products
+            </a>
+            <a href="{% url 'dashboard_orders' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="package" class="w-4 h-4 text-brandPink"></i> Fulfillments
+            </a>
+            {% if user.is_superuser %}
+                <a href="{% url 'admin_dashboard' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i> Platform Control
+                </a>
+            {% endif %}
+            <div class="h-[1px] bg-white/5 my-1.5"></div>
+            <a href="{% url 'catalog' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Exit to Catalog
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Right Products Table panel -->
+    <section class="lg:col-span-9 space-y-6">
+        
+        <div class="flex flex-wrap gap-4 items-center justify-between border-b border-white/5 pb-4">
+            <div>
+                <h1 class="text-xl md:text-2xl font-black text-white">Listed Products</h1>
+                <p class="text-xs text-slate-400 mt-1">Manage active listings, inventory quantities, and pricing levels.</p>
+            </div>
+            
+            <a href="{% url 'product_create' %}" class="bg-brandPurple hover:bg-brandPurple/90 hover:shadow-neon text-white text-xs font-black px-4 py-2.5 rounded-xl transition-all flex items-center gap-2">
+                <i data-lucide="plus-circle" class="w-4.5 h-4.5"></i> List Product
+            </a>
+        </div>
+
+        {% if products %}
+            <div class="p-6 rounded-2xl bg-cardBg border border-white/5">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5 text-slate-500 font-bold uppercase tracking-wider">
+                                <th class="pb-3 pr-4">Image</th>
+                                <th class="pb-3 px-4">Product Details</th>
+                                <th class="pb-3 px-4">Category</th>
+                                <th class="pb-3 px-4">Price</th>
+                                <th class="pb-3 px-4">Inventory</th>
+                                <th class="pb-3 px-4">Status</th>
+                                <th class="pb-3 pl-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for product in products %}
+                                <tr>
+                                    <td class="py-3.5 pr-4">
+                                        <img src="{{ product.image_url }}" alt="" class="w-10 h-10 object-cover rounded-xl border border-white/10">
+                                    </td>
+                                    <td class="py-3.5 px-4 font-extrabold text-white text-sm">
+                                        {{ product.name }}
+                                    </td>
+                                    <td class="py-3.5 px-4 font-semibold text-slate-400">{{ product.category.name }}</td>
+                                    <td class="py-3.5 px-4 font-black text-white">Rs. {{ product.price }}</td>
+                                    <td class="py-3.5 px-4 text-slate-300">
+                                        <span class="{% if product.stock <= 5 %}text-amber-400 font-bold{% endif %}">{{ product.stock }} units</span>
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        {% if product.stock == 0 %}
+                                            <span class="inline-block px-2 py-0.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Sold Out</span>
+                                        {% elif product.stock <= 5 %}
+                                            <span class="inline-block px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Low Stock</span>
+                                        {% else %}
+                                            <span class="inline-block px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3.5 pl-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="{% url 'product_update' product.id %}" class="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-slate-300 hover:text-white rounded-lg transition-colors" title="Edit Product">
+                                                <i data-lucide="pencil" class="w-4 h-4 text-brandCyan"></i>
+                                            </a>
+                                            <form action="{% url 'product_delete' product.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete product \'{{ product.name }}\'?');" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="p-2 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 text-rose-400 rounded-lg transition-colors" title="Delete Product">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-16 px-4 bg-cardBg border border-white/5 rounded-2xl shadow-2xl">
+                <div class="w-16 h-16 bg-slate-900 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="tag" class="w-7 h-7 text-slate-500"></i>
+                </div>
+                <h3 class="text-lg font-extrabold text-white mb-1">No products listed yet</h3>
+                <p class="text-xs text-slate-400 max-w-sm mx-auto mb-6">List your products with clear prices, stock, images, and descriptions to start receiving orders.</p>
+                <a href="{% url 'product_create' %}" class="bg-brandPurple hover:bg-brandPurple/90 hover:shadow-neon text-white text-xs font-black px-6 py-3 rounded-xl transition-all">
+                    List Your First Product
+                </a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

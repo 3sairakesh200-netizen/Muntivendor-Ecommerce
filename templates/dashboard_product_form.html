@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Product - Lumio{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- Left Sidebar Menu -->
+    <aside class="lg:col-span-3 bg-cardBg border border-white/5 rounded-2xl p-5 space-y-4">
+        <div class="text-center pb-4 border-b border-white/5">
+            <img src="{{ user.vendor_profile.logo_url|default:'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&h=400&q=80' }}" 
+                 alt="" class="w-16 h-16 rounded-2xl object-cover border-2 border-brandPurple mx-auto mb-3">
+            <h4 class="font-extrabold text-white text-base leading-tight">{{ user.vendor_profile.store_name }}</h4>
+            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-[8px] font-black uppercase tracking-wider mt-1.5">
+                <i data-lucide="shield-check" class="w-2.5 h-2.5"></i> APPROVED SELLER
+            </span>
+        </div>
+
+        <nav class="flex flex-col gap-1">
+            <a href="{% url 'dashboard_home' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Analytics Dashboard
+            </a>
+            <a href="{% url 'dashboard_products' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left bg-brandPurple text-white shadow-neon">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-brandCyan"></i> My Products
+            </a>
+            <a href="{% url 'dashboard_orders' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="package" class="w-4 h-4 text-brandPink"></i> Fulfillments
+            </a>
+            {% if user.is_superuser %}
+                <a href="{% url 'admin_dashboard' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i> Platform Control
+                </a>
+            {% endif %}
+            <div class="h-[1px] bg-white/5 my-1.5"></div>
+            <a href="{% url 'catalog' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Exit to Catalog
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Right Form Content panel -->
+    <section class="lg:col-span-9 space-y-6">
+        <a href="{% url 'dashboard_products' %}" class="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold px-4 py-2 rounded-xl transition-all border border-white/5">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Products List
+        </a>
+
+        <div class="p-6 md:p-8 rounded-2xl bg-cardBg border border-white/5 max-w-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-brandPurple/5 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="mb-8 relative z-10">
+                <h2 class="text-xl md:text-2xl font-black text-white">{{ action }} Premium Product</h2>
+                <p class="text-xs text-slate-400 mt-1">Enter product details, price, stock, category, and image URL.</p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="space-y-4 relative z-10">
+                {% csrf_token %}
+                
+                <div class="space-y-1.5">
+                    <label for="name" class="text-[10px] uppercase font-bold text-slate-400">Product Title *</label>
+                    <input type="text" id="name" name="name" placeholder="e.g. Reference Studio Headphones" required value="{{ product.name|default:'' }}"
+                           class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label for="price" class="text-[10px] uppercase font-bold text-slate-400">Price (USD) *</label>
+                        <input type="number" step="0.01" min="0.01" id="price" name="price" placeholder="99.99" required value="{{ product.price|default:'' }}"
+                               class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="stock" class="text-[10px] uppercase font-bold text-slate-400">Inventory Stock Level *</label>
+                        <input type="number" min="0" id="stock" name="stock" placeholder="10" required value="{{ product.stock|default:'' }}"
+                               class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="category" class="text-[10px] uppercase font-bold text-slate-400">Product Category *</label>
+                    <select id="category" name="category" required 
+                            class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none cursor-pointer">
+                        <option value="" disabled selected>Select category...</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if product.category.id == cat.id %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="image_url" class="text-[10px] uppercase font-bold text-slate-400">Image Showcase URL</label>
+                    <input type="url" id="image_url" name="image_url" placeholder="https://images.unsplash.com/photo..." value="{{ product.image_url|default:'' }}"
+                           class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+                    <small class="text-[9px] text-slate-500 mt-1 block">Specify a direct picture link. Unsplash URLs are ideal.</small>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="description" class="text-[10px] uppercase font-bold text-slate-400">Product Narrative / Description *</label>
+                    <textarea id="description" name="description" placeholder="Describe the product, size, material, usage, and important details..." required
+                              class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all h-28 resize-none">{{ product.description|default:'' }}</textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-brandPurple hover:bg-brandPurple/95 text-white font-extrabold text-xs py-3 rounded-xl transition-all hover:shadow-neon flex items-center justify-center gap-2 pt-2">
+                    <i data-lucide="save" class="w-4.5 h-4.5"></i> SAVE PRODUCT SETTINGS
+                </button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

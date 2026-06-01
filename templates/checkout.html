@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Secure Checkout - Lumio{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    selectedAddressId: '{% if addresses.exists %}{{ addresses.first.id }}{% else %}new{% endif %}',
+    shippingSpeed: 'standard',
+    shippingCost: 0,
+    subtotal: parseFloat('{{ cart.get_total_price }}'),
+    discount: parseFloat('{{ discount|default:0 }}'),
+    
+    getFinalTotal() {
+        let ship = (this.shippingSpeed === 'express') ? 150.00 : 0.00;
+        this.shippingCost = ship;
+        return (this.subtotal - this.discount + ship).toFixed(2);
+    }
+}">
+
+    <h1 class="text-2xl md:text-3xl font-black text-white mb-8 flex items-center gap-3">
+        <i data-lucide="shield-check" class="w-7 h-7 text-brandPurple"></i> Secure Checkout Flow
+    </h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left: Forms & Address management -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="p-6 md:p-8 rounded-2xl bg-cardBg border border-white/5 space-y-6">
+                
+                <form method="post" action="{% url 'checkout' %}" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Saved Addresses Selector (if any exist) -->
+                    {% if addresses.exists %}
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                                <i data-lucide="map-pin" class="w-4.5 h-4.5 text-brandCyan"></i> Select Shipping Address
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {% for addr in addresses %}
+                                    <label class="p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-3 relative"
+                                           :class="selectedAddressId === '{{ addr.id }}' ? 'border-brandPurple bg-brandPurple/5' : 'border-white/5 bg-darkBg/40 hover:bg-darkBg/60'">
+                                        <input type="radio" name="saved_address" value="{{ addr.id }}" 
+                                               class="mt-1 accent-brandPurple"
+                                               x-model="selectedAddressId"
+                                               {% if forloop.first %}checked{% endif %}>
+                                        <div class="text-xs">
+                                            <div class="font-extrabold text-slate-200">
+                                                {{ addr.first_name }} {{ addr.last_name }}
+                                                {% if addr.is_default %}
+                                                    <span class="ml-1.5 text-[8px] uppercase px-1.5 py-0.5 bg-brandCyan/20 text-brandCyan border border-brandCyan/20 rounded font-black">Default</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="text-slate-400 mt-1.5 leading-relaxed">
+                                                {{ addr.address_line1 }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
+                                                {{ addr.city }}, {{ addr.state }} {{ addr.postal_code }}<br>
+                                                {{ addr.country }}
+                                            </div>
+                                        </div>
+                                    </label>
+                                {% endfor %}
+                                <label class="p-4 rounded-xl border border-dashed border-white/10 hover:border-brandPurple/40 bg-darkBg/20 hover:bg-darkBg/40 transition-all cursor-pointer flex items-center justify-center gap-2.5 text-xs text-slate-400 hover:text-slate-200"
+                                       :class="selectedAddressId === 'new' ? 'border-brandPurple bg-brandPurple/5' : ''">
+                                    <input type="radio" name="saved_address" value="new" class="accent-brandPurple" x-model="selectedAddressId">
+                                    <div class="font-extrabold">Ship to a new address</div>
+                                </label>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- New Address Input Fields (Hidden if using a saved address) -->
+                    <div x-show="selectedAddressId === 'new'" x-transition:enter="transition ease-out duration-200" class="space-y-4 border-t border-white/5 pt-6">
+                        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                            <i data-lucide="truck" class="w-4.5 h-4.5 text-brandPurple"></i> Add New Address Details
+                        </h3>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label for="first_name" class="text-[10px] uppercase font-bold text-slate-400">First Name *</label>
+                                <input type="text" id="first_name" name="first_name" class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none" 
+                                       :required="selectedAddressId === 'new'">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label for="last_name" class="text-[10px] uppercase font-bold text-slate-400">Last Name *</label>
+                                <input type="text" id="last_name" name="last_name" class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none"
+                                       :required="selectedAddressId === 'new'">
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="email" class="text-[10px] uppercase font-bold text-slate-400">Email Address *</label>
+                            <input type="email" id="email" name="email" class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none" 
+                                   value="{{ user.email }}" :required="selectedAddressId === 'new'">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="address" class="text-[10px] uppercase font-bold text-slate-400">Street Address *</label>
+                            <input type="text" id="address" name="address" placeholder="e.g. 123 Main St, Apt 4B" class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none"
+                                   :required="selectedAddressId === 'new'">
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="space-y-1.5 col-span-2">
+                                <label for="city" class="text-[10px] uppercase font-bold text-slate-400">City *</label>
+                                <input type="text" id="city" name="city" class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none"
+                                       :required="selectedAddressId === 'new'">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label for="postal_code" class="text-[10px] uppercase font-bold text-slate-400">Postal Code *</label>
+                                <input type="text" id="postal_code" name="postal_code" class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none"
+                                       :required="selectedAddressId === 'new'">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label for="state" class="text-[10px] uppercase font-bold text-slate-400">State / Region *</label>
+                                <input type="text" id="state" name="state" class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none"
+                                       :required="selectedAddressId === 'new'">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label for="country" class="text-[10px] uppercase font-bold text-slate-400">Country *</label>
+                                <input type="text" id="country" name="country" class="w-full bg-darkBg text-slate-200 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none" 
+                                       value="India" :required="selectedAddressId === 'new'">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Speeds Selection -->
+                    <div class="space-y-3 border-t border-white/5 pt-6">
+                        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+                            <i data-lucide="rocket" class="w-4.5 h-4.5 text-brandPink"></i> Choose Shipping Speed
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label class="p-4 rounded-xl border cursor-pointer flex items-center justify-between transition-all"
+                                   :class="shippingSpeed === 'standard' ? 'border-brandPurple bg-brandPurple/5' : 'border-white/5 bg-darkBg/40 hover:bg-darkBg/60'">
+                                <div class="flex items-center gap-2.5">
+                                    <input type="radio" name="shipping_speed" value="standard" class="accent-brandPurple" x-model="shippingSpeed">
+                                    <div class="text-xs">
+                                        <div class="font-extrabold text-slate-200">Standard Delivery</div>
+                                        <div class="text-slate-400 mt-0.5">Arrives in 2-3 business days</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-black text-brandCyan">FREE</span>
+                            </label>
+                            <label class="p-4 rounded-xl border cursor-pointer flex items-center justify-between transition-all"
+                                   :class="shippingSpeed === 'express' ? 'border-brandPurple bg-brandPurple/5' : 'border-white/5 bg-darkBg/40 hover:bg-darkBg/60'">
+                                <div class="flex items-center gap-2.5">
+                                    <input type="radio" name="shipping_speed" value="express" class="accent-brandPurple" x-model="shippingSpeed">
+                                    <div class="text-xs">
+                                        <div class="font-extrabold text-slate-200">Express Delivery</div>
+                                        <div class="text-slate-400 mt-0.5">Arrives tomorrow morning</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-black text-brandPink">+Rs. 150.00</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Payment Protection warning info -->
+                    <div class="p-4 rounded-xl bg-brandCyan/5 border border-brandCyan/20 flex items-start gap-3">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-brandCyan flex-shrink-0 mt-0.5"></i>
+                        <div class="text-xs leading-relaxed text-slate-300">
+                            <strong class="text-white">Payment Protection Active:</strong> Your order and payment details are handled securely during checkout.
+                        </div>
+                    </div>
+
+                    <!-- Submit checkout button -->
+                    <button type="submit" class="w-full bg-brandPurple hover:bg-brandPurple/95 text-white font-extrabold text-sm py-3.5 rounded-xl transition-all hover:shadow-neon flex items-center justify-center gap-2">
+                        <i data-lucide="lock" class="w-4.5 h-4.5"></i> COMPLETE PAYMENT
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side: Order summary review & Coupon input -->
+        <div class="lg:col-span-4 space-y-6">
+            
+            <!-- Summary stats panel -->
+            <div class="p-6 rounded-2xl glass-panel border border-white/10 space-y-6">
+                <h3 class="text-sm font-extrabold text-white border-b border-white/5 pb-3">
+                    Order Summary
+                </h3>
+                
+                <!-- Items list summary -->
+                <div class="space-y-3.5 max-h-48 overflow-y-auto pr-1">
+                    {% for item in cart %}
+                        <div class="flex items-center gap-3">
+                            <img src="{{ item.product.image_url }}" alt="" class="w-10 h-10 object-cover rounded-lg border border-white/10 flex-shrink-0">
+                            <div class="flex-grow min-w-0">
+                                <h4 class="text-xs font-bold text-slate-200 truncate">{{ item.product.name }}</h4>
+                                <span class="text-[9px] text-slate-400 block">Qty: {{ item.quantity }} &bull; Sold by: {{ item.product.vendor.store_name }}</span>
+                            </div>
+                            <span class="text-xs font-bold text-white">Rs. {{ item.total_price }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pricing calculations breakdown -->
+                <div class="space-y-2 border-t border-white/5 pt-4 text-xs font-bold">
+                    <div class="flex justify-between text-slate-400">
+                        <span>Cart Subtotal</span>
+                        <span class="text-slate-200">Rs. {{ cart.get_total_price }}</span>
+                    </div>
+
+                    {% if coupon %}
+                        <div class="flex justify-between text-brandPink">
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="tag" class="w-3.5 h-3.5"></i> Coupon ({{ coupon.code }})
+                            </span>
+                            <span>-Rs. {{ discount|floatformat:2 }}</span>
+                        </div>
+                    {% endif %}
+
+                    <div class="flex justify-between text-slate-400">
+                        <span>Shipping Cost</span>
+                        <span class="text-slate-200" x-text="shippingCost === 0 ? 'FREE' : '+Rs. ' + shippingCost.toFixed(2)">FREE</span>
+                    </div>
+
+                    <div class="flex justify-between text-sm text-white pt-4 border-t border-white/5 font-black">
+                        <span>Total Due</span>
+                        <span class="text-brandPurple" x-text="`Rs. ` + getFinalTotal()">Rs. 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coupon discount applicator panel -->
+            <div class="p-6 rounded-2xl bg-cardBg border border-white/5 space-y-4">
+                <h4 class="text-xs font-extrabold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="tag" class="w-4 h-4 text-brandPink"></i> Apply Promotional Code
+                </h4>
+                
+                {% if not coupon %}
+                    <form method="post" action="{% url 'apply_coupon' %}" class="flex gap-2">
+                        {% csrf_token %}
+                        <input type="text" name="coupon_code" placeholder="e.g. SUMMER20" 
+                               class="bg-darkBg text-slate-200 border border-white/10 rounded-xl px-3 py-2 text-xs focus:border-brandPurple outline-none flex-grow">
+                        <button type="submit" class="bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs px-4 rounded-xl transition-all">
+                            Apply
+                        </button>
+                    </form>
+                    <p class="text-[10px] text-slate-500 leading-normal">Try codes <code class="text-brandPurple font-bold">SUMMER20</code> (20% off) or <code class="text-brandCyan font-bold">SAVE10</code> (10% off).</p>
+                {% else %}
+                    <div class="p-3 bg-brandPurple/5 border border-brandPurple/20 rounded-xl flex items-center justify-between text-xs">
+                        <div>
+                            <span class="font-extrabold text-brandPurple block">{{ coupon.code }} Active</span>
+                            <span class="text-[10px] text-slate-400">{{ coupon.discount_percent }}% off total cost.</span>
+                        </div>
+                        <a href="{% url 'remove_coupon' %}" class="text-rose-400 hover:text-rose-300 font-black" title="Remove Coupon">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

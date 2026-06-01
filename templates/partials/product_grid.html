@@ -1,0 +1,98 @@
+{% if products %}
+    <div :class="layoutView === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'flex flex-col gap-4'">
+        {% for product in products %}
+            <article class="relative bg-cardBg border border-white/5 rounded-2xl overflow-hidden group hover:border-brandPurple/30 transition-all duration-300 hover:-translate-y-1.5 flex"
+                     :class="layoutView === 'grid' ? 'flex-col' : 'flex-row items-center p-4 gap-6'">
+                
+                <!-- Wishlist Toggle (Top Right) -->
+                {% if user.is_authenticated %}
+                    <button class="absolute top-3 right-3 z-10 p-2 bg-darkBg/80 backdrop-blur-md rounded-xl border border-white/10 hover:border-brandPink/40 text-slate-400 hover:text-brandPink transition-colors"
+                            x-data="{ 
+                                isWishlisted: {% if product in user.wishlist_items.all %}true{% else %}false{% endif %},
+                                toggle() {
+                                    fetch('{% url 'wishlist_toggle' product.id %}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': '{{ csrf_token }}',
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        }
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        this.isWishlisted = data.added;
+                                    });
+                                }
+                            }"
+                            @click="toggle()">
+                        <i data-lucide="heart" class="w-4 h-4" :class="isWishlisted ? 'fill-brandPink text-brandPink' : ''"></i>
+                    </button>
+                {% endif %}
+
+                <!-- Image Wrapper -->
+                <div class="relative bg-slate-950 overflow-hidden"
+                     :class="layoutView === 'grid' ? 'w-full aspect-[4/3]' : 'w-48 h-36 rounded-xl flex-shrink-0'">
+                    <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ product.image_url }}" alt="{{ product.name }}">
+                    
+                    <!-- Vendor Badge -->
+                    <div class="absolute bottom-3 left-3 bg-darkBg/80 backdrop-blur-md border border-white/10 rounded-full px-2.5 py-1 flex items-center gap-1.5 text-[10px] font-bold text-slate-200">
+                        <i data-lucide="store" class="w-3.5 h-3.5 text-brandCyan"></i>
+                        <span>{{ product.vendor.store_name }}</span>
+                    </div>
+                </div>
+
+                <!-- Product Details Content -->
+                <div class="flex-grow p-5 flex flex-col justify-between"
+                     :class="layoutView === 'grid' ? 'h-full' : 'p-0'">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                            <span class="text-[10px] font-black uppercase text-brandPurple tracking-widest">{{ product.category.name }}</span>
+                            <!-- Dynamic Ratings indicator -->
+                            <div class="flex items-center gap-1">
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
+                                <span class="text-xs font-bold text-slate-200">
+                                    {{ product.avg_rating|floatformat:1|default:"5.0" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <h3 class="text-base font-extrabold text-white mb-2 leading-snug group-hover:text-brandPurple transition-colors truncate max-w-full">
+                            <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
+                        </h3>
+                        <p class="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-4" :class="layoutView === 'grid' ? '' : 'line-clamp-3'">
+                            {{ product.description }}
+                        </p>
+                    </div>
+
+                    <!-- Footer / Purchase actions -->
+                    <div class="flex items-center justify-between border-t border-white/5 pt-3.5 mt-auto">
+                        <div>
+                            <div class="text-lg font-black text-white">Rs. {{ product.price }}</div>
+                            {% if product.stock == 0 %}
+                                <span class="text-[9px] font-bold text-rose-400 flex items-center gap-0.5 mt-0.5"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Sold Out</span>
+                            {% elif product.stock <= 5 %}
+                                <span class="text-[9px] font-bold text-amber-400 flex items-center gap-0.5 mt-0.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Only {{ product.stock }} Left</span>
+                            {% else %}
+                                <span class="text-[9px] font-bold text-emerald-400 flex items-center gap-0.5 mt-0.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock</span>
+                            {% endif %}
+                        </div>
+
+                        <a href="{% url 'product_detail' product.slug %}" class="bg-brandPurple/10 hover:bg-brandPurple border border-brandPurple/20 hover:border-brandPurple hover:shadow-neon p-2.5 rounded-xl text-brandPurple hover:text-white transition-all">
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-16 px-4 bg-cardBg/40 border border-white/5 rounded-2xl">
+        <div class="w-16 h-16 bg-slate-900 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="shopping-cart" class="w-7 h-7 text-slate-500"></i>
+        </div>
+        <h3 class="text-lg font-extrabold text-white mb-1">No products match your criteria</h3>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto mb-6">Try relaxing your search terms, modifying your filters, or picking a different category pill.</p>
+        <button onclick="window.location.href='{% url 'catalog' %}'" class="bg-brandPurple hover:bg-brandPurple/90 hover:shadow-neon text-white text-xs font-black px-5 py-2.5 rounded-xl transition-all">
+            Reset All Filters
+        </button>
+    </div>
+{% endif %}

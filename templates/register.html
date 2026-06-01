@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Up - Lumio{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto my-12 bg-cardBg border border-slate-200/50 rounded-3xl p-8 shadow-2xl relative glow-border">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-brandPurple/5 rounded-full blur-2xl pointer-events-none"></div>
+
+    <div class="text-center mb-8 relative z-10">
+        <i data-lucide="user-plus" class="w-12 h-12 text-brandPurple mx-auto mb-3"></i>
+        <h2 class="text-2xl font-black text-slate-800">Create Account</h2>
+        <p class="text-xs text-slate-500 mt-1">Join Lumio to shop everyday products from many sellers.</p>
+    </div>
+
+    <form method="post" action="{% url 'register' %}" class="space-y-4 relative z-10">
+        {% csrf_token %}
+        <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+                <label for="first_name" class="text-[10px] uppercase font-bold text-slate-500">First Name</label>
+                <input type="text" id="first_name" name="first_name" placeholder="John"
+                       class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+            </div>
+            <div class="space-y-1.5">
+                <label for="last_name" class="text-[10px] uppercase font-bold text-slate-500">Last Name</label>
+                <input type="text" id="last_name" name="last_name" placeholder="Doe"
+                       class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+            </div>
+        </div>
+
+        <div class="space-y-1.5">
+            <label for="username" class="text-[10px] uppercase font-bold text-slate-500">Username *</label>
+            <input type="text" id="username" name="username" placeholder="johndoe" required
+                   class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+        </div>
+
+        <div class="space-y-1.5">
+            <label for="email" class="text-[10px] uppercase font-bold text-slate-500">Email Address *</label>
+            <input type="email" id="email" name="email" placeholder="john@example.com" required
+                   class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+                <label for="password" class="text-[10px] uppercase font-bold text-slate-500">Password *</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required
+                       class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+            </div>
+            <div class="space-y-1.5">
+                <label for="confirm_password" class="text-[10px] uppercase font-bold text-slate-500">Confirm Password *</label>
+                <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required
+                       class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+            </div>
+        </div>
+
+        <button type="submit" class="w-full btn btn-primary py-3 flex items-center justify-center gap-2 mt-2">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> CREATE CUSTOMER ACCOUNT
+        </button>
+    </form>
+    
+    <div class="text-center mt-6 text-xs text-slate-500 relative z-10">
+        Already have an account? <a href="{% url 'login' %}" class="text-brandPurple font-bold hover:underline">Sign In</a>
+    </div>
+</div>
+{% endblock %}

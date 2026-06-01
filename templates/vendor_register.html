@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sell on Lumio - Partner Onboarding{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto my-12 bg-cardBg border border-slate-200/50 rounded-3xl p-8 md:p-12 shadow-2xl relative grid grid-cols-1 lg:grid-cols-2 gap-12 items-center glow-border">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-brandPurple/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Left Column: Registration Form -->
+    <div class="relative z-10 space-y-6">
+        <div>
+            <i data-lucide="store" class="w-12 h-12 text-brandPurple mb-3"></i>
+            <h2 class="text-2xl font-black text-slate-800">Merchant Onboarding</h2>
+            <p class="text-xs text-slate-500 mt-1">Launch your digital storefront in less than 2 minutes</p>
+        </div>
+
+        <form method="post" action="{% url 'vendor_register' %}" class="space-y-4">
+            {% csrf_token %}
+            
+            <div class="border-b border-slate-200/60 pb-2">
+                <span class="text-[9px] uppercase font-black text-brandPurple tracking-wider">1. Store Settings</span>
+            </div>
+            
+            <div class="space-y-1.5">
+                <label for="store_name" class="text-[10px] uppercase font-bold text-slate-500">Store Name *</label>
+                <input type="text" id="store_name" name="store_name" placeholder="e.g. IndiTech Labs" required
+                       class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+            </div>
+            <div class="space-y-1.5">
+                <label for="description" class="text-[10px] uppercase font-bold text-slate-500">Store Description</label>
+                <textarea id="description" name="description" placeholder="Craftsmanship details, materials..." 
+                          class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all h-20 resize-none"></textarea>
+            </div>
+
+            <div class="border-b border-slate-200/60 pb-2 pt-2">
+                <span class="text-[9px] uppercase font-black text-brandPurple tracking-wider">2. Account Credentials</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label for="first_name" class="text-[10px] uppercase font-bold text-slate-500">First Name</label>
+                    <input type="text" id="first_name" name="first_name" placeholder="Jane"
+                           class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+                </div>
+                <div class="space-y-1.5">
+                    <label for="last_name" class="text-[10px] uppercase font-bold text-slate-500">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" placeholder="Doe"
+                           class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+                </div>
+            </div>
+            
+            <div class="space-y-1.5">
+                <label for="username" class="text-[10px] uppercase font-bold text-slate-500">Username *</label>
+                <input type="text" id="username" name="username" placeholder="janedoe" required
+                       class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+            </div>
+            
+            <div class="space-y-1.5">
+                <label for="email" class="text-[10px] uppercase font-bold text-slate-500">Business Email *</label>
+                <input type="email" id="email" name="email" placeholder="jane@apex.com" required
+                       class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label for="password" class="text-[10px] uppercase font-bold text-slate-500">Password *</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required
+                           class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+                </div>
+                <div class="space-y-1.5">
+                    <label for="confirm_password" class="text-[10px] uppercase font-bold text-slate-500">Confirm Password *</label>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required
+                           class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full btn btn-primary py-3 flex items-center justify-center gap-2 pt-2">
+                <i data-lucide="rocket" class="w-4 h-4"></i> LAUNCH STOREFRONT
+            </button>
+        </form>
+    </div>
+
+    <!-- Right Column: Visual Pitch/Benefits -->
+    <div class="relative z-10 border-t lg:border-t-0 lg:border-l border-slate-200/60 pt-8 lg:pt-0 lg:pl-12 space-y-6">
+        <h3 class="text-xl font-extrabold text-slate-800 leading-tight">Why sell products on Lumio?</h3>
+        
+        <div class="space-y-6">
+            <div class="flex gap-4">
+                <div class="w-10 h-10 bg-brandPurple/10 border border-brandPurple/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="percent" class="text-brandPurple w-5 h-5"></i>
+                </div>
+                <div>
+                    <h5 class="font-extrabold text-sm mb-1 text-slate-800">Low 10% Platform Fee</h5>
+                    <p class="text-slate-500 text-xs leading-relaxed">Sellers retain 90% of each sale. No monthly hosting fees or storefront subscriptions.</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-4">
+                <div class="w-10 h-10 bg-brandCyan/10 border border-brandCyan/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="bar-chart-2" class="text-brandCyan w-5 h-5"></i>
+                </div>
+                <div>
+                    <h5 class="font-extrabold text-sm mb-1 text-slate-800">Sales Dashboard Metrics</h5>
+                    <p class="text-slate-500 text-xs leading-relaxed">Monitor daily, weekly, and monthly sales stats with dynamic ApexCharts integrations.</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-4">
+                <div class="w-10 h-10 bg-brandPink/10 border border-brandPink/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="globe" class="text-brandPink w-5 h-5"></i>
+                </div>
+                <div>
+                    <h5 class="font-extrabold text-sm mb-1 text-slate-800">REST API Ready</h5>
+                    <p class="text-slate-500 text-xs leading-relaxed">Fast, fully-documented JSON endpoints to sync external trackers or custom inventory logs.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

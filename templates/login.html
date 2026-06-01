@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign In - Lumio{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-12 bg-cardBg border border-slate-200/50 rounded-3xl p-8 shadow-2xl relative glow-border">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-brandPurple/5 rounded-full blur-2xl pointer-events-none"></div>
+
+    <div class="text-center mb-8 relative z-10">
+        <i data-lucide="sparkles" class="w-12 h-12 text-brandPurple mx-auto mb-3 animate-pulse"></i>
+        <h2 class="text-2xl font-black text-slate-800">Welcome Back</h2>
+        <p class="text-xs text-slate-500 mt-1">Sign in to access your curated marketplace logs</p>
+    </div>
+
+    <form method="post" action="{% url 'login' %}" class="space-y-5 relative z-10">
+        {% csrf_token %}
+        <div class="space-y-1.5">
+            <label for="username" class="text-[10px] uppercase font-bold text-slate-500">Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="username"
+                   class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+        </div>
+        
+        <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+                <label for="password" class="text-[10px] uppercase font-bold text-slate-500">Password</label>
+            </div>
+            <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password"
+                   class="w-full bg-slate-100 text-slate-800 border border-slate-200/70 rounded-xl px-4 py-2.5 text-xs focus:border-brandPurple outline-none transition-all">
+        </div>
+
+        <button type="submit" class="w-full btn btn-primary py-3 flex items-center justify-center gap-2">
+            <i data-lucide="log-in" class="w-4 h-4"></i> SIGN IN TO ACCOUNT
+        </button>
+    </form>
+    
+    <div class="text-center mt-6 text-xs text-slate-500 relative z-10">
+        Don't have an account? <a href="{% url 'register' %}" class="text-brandPurple font-bold hover:underline">Sign Up</a>
+    </div>
+</div>
+{% endblock %}

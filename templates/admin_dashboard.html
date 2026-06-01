@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Platform Administration - Lumio{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="border-b border-white/5 pb-4">
+        <h1 class="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+            <i data-lucide="shield-alert" class="w-7 h-7 text-brandPurple animate-pulse"></i> Platform Control Console
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">Monitor global transaction volumes, platform commission shares, and manage storefront statuses.</p>
+    </div>
+
+    <!-- Platform stats metrics -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="p-5 rounded-2xl bg-cardBg border border-white/5 relative overflow-hidden">
+            <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Gross GMV Volume</div>
+            <div class="text-2xl font-black text-white mt-1.5">Rs. {{ total_sales|floatformat:2 }}</div>
+            <i data-lucide="database" class="absolute right-4 bottom-4 w-12 h-12 text-slate-900 -z-0 pointer-events-none opacity-40"></i>
+        </div>
+        
+        <div class="p-5 rounded-2xl bg-cardBg border border-white/5 relative overflow-hidden">
+            <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Platform Take (10%)</div>
+            <div class="text-2xl font-black text-brandCyan mt-1.5">Rs. {{ platform_commission|floatformat:2 }}</div>
+            <i data-lucide="percent" class="absolute right-4 bottom-4 w-12 h-12 text-slate-900 -z-0 pointer-events-none opacity-40"></i>
+        </div>
+        
+        <div class="p-5 rounded-2xl bg-cardBg border border-white/5 relative overflow-hidden">
+            <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Active Merchants</div>
+            <div class="text-2xl font-black text-white mt-1.5">{{ total_vendors }}</div>
+            <i data-lucide="store" class="absolute right-4 bottom-4 w-12 h-12 text-slate-900 -z-0 pointer-events-none opacity-40"></i>
+        </div>
+        
+        <div class="p-5 rounded-2xl bg-cardBg border border-white/5 relative overflow-hidden">
+            <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Global Listings</div>
+            <div class="text-2xl font-black text-brandPink mt-1.5">{{ total_products }}</div>
+            <i data-lucide="tag" class="absolute right-4 bottom-4 w-12 h-12 text-slate-900 -z-0 pointer-events-none opacity-40"></i>
+        </div>
+    </div>
+
+    <!-- Dual Layout splits -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left: Merchant directories approvals -->
+        <div class="lg:col-span-8 p-6 bg-cardBg border border-white/5 rounded-2xl space-y-6">
+            <h3 class="text-sm font-extrabold text-white flex items-center gap-2 border-b border-white/5 pb-3">
+                <i data-lucide="users" class="w-4.5 h-4.5 text-brandCyan"></i> Merchant Directories Verification
+            </h3>
+            
+            {% if vendors %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5 text-slate-500 font-bold uppercase tracking-wider">
+                                <th class="pb-3 pr-4">Storefront Details</th>
+                                <th class="pb-3 px-4">Owner Profile</th>
+                                <th class="pb-3 px-4">Commission Balance</th>
+                                <th class="pb-3 px-4">Merchant Status</th>
+                                <th class="pb-3 pl-4 text-right">Verification action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for v in vendors %}
+                                <tr>
+                                    <td class="py-3.5 pr-4">
+                                        <div class="flex items-center gap-2.5">
+                                            <img src="{{ v.logo_url }}" alt="" class="w-9 h-9 rounded-xl object-cover border border-white/10">
+                                            <strong class="text-white font-extrabold">{{ v.store_name }}</strong>
+                                        </div>
+                                    </td>
+                                    <td class="py-3.5 px-4 text-slate-400">
+                                        {{ v.user.username }}<br>
+                                        <span class="text-[10px] text-slate-500">{{ v.user.email }}</span>
+                                    </td>
+                                    <td class="py-3.5 px-4 font-black text-white">Rs. {{ v.balance|floatformat:2 }}</td>
+                                    <td class="py-3.5 px-4">
+                                        {% if v.status == 'PENDING' %}
+                                            <span class="inline-block px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Pending Approval</span>
+                                        {% elif v.status == 'APPROVED' %}
+                                            <span class="inline-block px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Active Verified</span>
+                                        {% else %}
+                                            <span class="inline-block px-2.5 py-0.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Suspended</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3.5 pl-4 text-right">
+                                        <form method="post" class="inline-flex gap-1.5 justify-end">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="vendor_id" value="{{ v.id }}">
+                                            {% if v.status == 'PENDING' or v.status == 'SUSPENDED' %}
+                                                <button type="submit" name="action" value="APPROVE" class="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white text-[10px] font-black px-3 py-1.5 rounded-lg border border-emerald-500/20 transition-all hover:shadow-neonCyan">
+                                                    Verify Store
+                                                </button>
+                                            {% endif %}
+                                            {% if v.status == 'APPROVED' %}
+                                                <button type="submit" name="action" value="SUSPEND" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white text-[10px] font-black px-3 py-1.5 rounded-lg border border-rose-500/20 transition-all">
+                                                    Suspend
+                                                </button>
+                                            {% endif %}
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-slate-400 text-xs py-4 text-center">No merchant store registrations recorded.</p>
+            {% endif %}
+        </div>
+
+        <!-- Right: Recent sales global transactions lists -->
+        <div class="lg:col-span-4 p-6 glass-panel border border-white/10 rounded-2xl space-y-6">
+            <h3 class="text-sm font-extrabold text-white flex items-center gap-2 border-b border-white/5 pb-3">
+                <i data-lucide="activity" class="w-4.5 h-4.5 text-brandPink animate-pulse"></i> Global Sales Feed
+            </h3>
+            
+            {% if orders %}
+                <div class="flex flex-col gap-3.5 max-h-[480px] overflow-y-auto pr-1">
+                    {% for o in orders %}
+                        <div class="bg-darkBg/60 border border-white/5 rounded-xl p-4 flex items-center justify-between gap-3 shadow-lg">
+                            <div class="min-w-0">
+                                <span class="font-extrabold text-white text-xs block">Order #{{ o.id }}</span>
+                                <span class="text-[10px] text-slate-400 block truncate mt-0.5">Buyer: {{ o.first_name }} {{ o.last_name }}</span>
+                                <span class="text-[9px] text-slate-500 block">{{ o.created_at|date:"M d, H:i" }}</span>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="font-black text-brandCyan text-xs block">Rs. {{ o.total_amount }}</span>
+                                <span class="inline-block px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[8px] font-bold uppercase tracking-wider mt-1.5">Paid</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12 text-slate-500">
+                    <i data-lucide="shopping-cart" class="w-7 h-7 mx-auto mb-2.5"></i>
+                    <p class="text-[10px]">No sales recorded on the platform yet.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

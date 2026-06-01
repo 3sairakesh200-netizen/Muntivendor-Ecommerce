@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Merchant Portal - Lumio{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- Left Sidebar Menu -->
+    <aside class="lg:col-span-3 bg-cardBg border border-white/5 rounded-2xl p-5 space-y-4">
+        <div class="text-center pb-4 border-b border-white/5">
+            <img src="{{ vendor.logo_url|default:'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&h=400&q=80' }}" 
+                 alt="" class="w-16 h-16 rounded-2xl object-cover border-2 border-brandPurple mx-auto mb-3">
+            <h4 class="font-extrabold text-white text-base leading-tight">{{ vendor.store_name }}</h4>
+            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-[8px] font-black uppercase tracking-wider mt-1.5">
+                <i data-lucide="shield-check" class="w-2.5 h-2.5"></i> APPROVED SELLER
+            </span>
+        </div>
+
+        <nav class="flex flex-col gap-1">
+            <a href="{% url 'dashboard_home' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left bg-brandPurple text-white shadow-neon">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Analytics Dashboard
+            </a>
+            <a href="{% url 'dashboard_products' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-brandCyan"></i> My Products
+            </a>
+            <a href="{% url 'dashboard_orders' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="package" class="w-4 h-4 text-brandPink"></i> Fulfillments
+            </a>
+            {% if user.is_superuser %}
+                <a href="{% url 'admin_dashboard' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i> Platform Control
+                </a>
+            {% endif %}
+            <div class="h-[1px] bg-white/5 my-1.5"></div>
+            <a href="{% url 'catalog' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Exit to Catalog
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Right Analytics Panel -->
+    <section class="lg:col-span-9 space-y-6">
+        
+        <!-- Welcome Header -->
+        <div class="flex flex-wrap gap-4 items-center justify-between border-b border-white/5 pb-4">
+            <div>
+                <h1 class="text-xl md:text-2xl font-black text-white">Merchant Console</h1>
+                <p class="text-xs text-slate-400 mt-1">Review live metrics, revenue reports, and low stock warnings.</p>
+            </div>
+            
+            <!-- Dynamic alerts pill -->
+            <div class="flex items-center gap-2">
+                {% if low_stock_count > 0 or out_of_stock_count > 0 %}
+                    <span class="inline-flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black px-3 py-1.5 rounded-xl animate-pulse">
+                        <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> 
+                        {{ low_stock_count|add:out_of_stock_count }} INVENTORY ALERTS
+                    </span>
+                {% else %}
+                    <span class="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-xl">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i> INVENTORY HEALTHY
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Metric Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="p-5 rounded-2xl bg-cardBg border border-white/5 relative overflow-hidden">
+                <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Gross Profits</div>
+                <div class="text-2xl font-black text-white mt-1.5">Rs. {{ total_earnings|floatformat:2 }}</div>
+                <i data-lucide="indian-rupee" class="absolute right-4 bottom-4 w-12 h-12 text-slate-900 -z-0 pointer-events-none opacity-40"></i>
+            </div>
+            
+            <div class="p-5 rounded-2xl bg-cardBg border border-white/5 relative overflow-hidden">
+                <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Orders Sold</div>
+                <div class="text-2xl font-black text-white mt-1.5">{{ total_orders }}</div>
+                <i data-lucide="shopping-cart" class="absolute right-4 bottom-4 w-12 h-12 text-slate-900 -z-0 pointer-events-none opacity-40"></i>
+            </div>
+            
+            <div class="p-5 rounded-2xl bg-cardBg border border-white/5 relative overflow-hidden">
+                <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Listed Items</div>
+                <div class="text-2xl font-black text-white mt-1.5">{{ total_products }}</div>
+                <i data-lucide="tag" class="absolute right-4 bottom-4 w-12 h-12 text-slate-900 -z-0 pointer-events-none opacity-40"></i>
+            </div>
+            
+            <div class="p-5 rounded-2xl bg-cardBg border border-white/5 relative overflow-hidden">
+                <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Seller Balance</div>
+                <div class="text-2xl font-black text-brandCyan mt-1.5">Rs. {{ vendor.balance|floatformat:2 }}</div>
+                <i data-lucide="wallet" class="absolute right-4 bottom-4 w-12 h-12 text-slate-900 -z-0 pointer-events-none opacity-40"></i>
+            </div>
+        </div>
+
+        <!-- Inventory low stock warning details -->
+        {% if low_stock_count > 0 or out_of_stock_count > 0 %}
+            <div class="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-xs flex gap-3 items-start">
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5 animate-bounce"></i>
+                <div class="space-y-1">
+                    <strong class="text-white">Low Stock Restock Alerts:</strong>
+                    <p class="text-slate-400">Some of your products are running low on stock or completely sold out. Customers cannot purchase sold out listings.</p>
+                    <a href="{% url 'dashboard_products' %}" class="inline-block text-brandPurple font-bold hover:underline mt-1.5">Manage stock details &rarr;</a>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Sales Chart -->
+        <div class="p-6 rounded-2xl bg-cardBg border border-white/5">
+            <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <i data-lucide="trending-up" class="w-4.5 h-4.5 text-brandPurple"></i> Revenue &amp; Orders Trend
+            </h3>
+            
+            <!-- Glowing ApexChart Area -->
+            <div class="w-full h-64 relative">
+                <div id="vendor-sales-chart" class="w-full h-full"></div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Table -->
+        <div class="p-6 rounded-2xl bg-cardBg border border-white/5 space-y-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i data-lucide="clock" class="w-4.5 h-4.5 text-brandPink"></i> Fulfillments Queue
+            </h3>
+
+            {% if recent_items %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5 text-slate-500 font-bold uppercase tracking-wider">
+                                <th class="pb-3 pr-4">Order ID</th>
+                                <th class="pb-3 px-4">Product</th>
+                                <th class="pb-3 px-4">Qty</th>
+                                <th class="pb-3 px-4">Amount</th>
+                                <th class="pb-3 pl-4 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for item in recent_items %}
+                                <tr>
+                                    <td class="py-3.5 pr-4 text-white font-extrabold">#{{ item.order.id }}</td>
+                                    <td class="py-3.5 px-4 font-semibold text-slate-200">
+                                        <div class="flex items-center gap-2.5">
+                                            <img src="{{ item.product.image_url }}" alt="" class="w-8 h-8 rounded-lg object-cover border border-white/5">
+                                            <span>{{ item.product.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3.5 px-4 text-slate-300">{{ item.quantity }}</td>
+                                    <td class="py-3.5 px-4 font-black text-white">Rs. {{ item.get_cost }}</td>
+                                    <td class="py-3.5 pl-4 text-right">
+                                        {% if item.status == 'PENDING' %}
+                                            <span class="inline-block px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Pending</span>
+                                        {% elif item.status == 'PROCESSING' %}
+                                            <span class="inline-block px-2.5 py-0.5 bg-brandCyan/10 border border-brandCyan/20 text-brandCyan rounded-lg text-[9px] font-bold uppercase tracking-wide">Processing</span>
+                                        {% elif item.status == 'SHIPPED' %}
+                                            <span class="inline-block px-2.5 py-0.5 bg-brandPurple/10 border border-brandPurple/20 text-brandPurple rounded-lg text-[9px] font-bold uppercase tracking-wide">Shipped</span>
+                                        {% else %}
+                                            <span class="inline-block px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Delivered</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-12 border border-white/5 border-dashed rounded-2xl bg-darkBg/25">
+                    <i data-lucide="package-x" class="w-8 h-8 text-slate-600 mx-auto mb-2.5"></i>
+                    <h4 class="text-xs font-bold text-slate-300">No orders received yet</h4>
+                    <p class="text-[10px] text-slate-500 mt-1">Once custom orders are placed, they will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include ApexCharts for sales charts -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let months = [];
+        let amounts = [];
+        
+        {% for item in sales_trend %}
+            months.push('{{ item.month }}');
+            amounts.push(parseFloat('{{ item.amount }}'));
+        {% endfor %}
+
+        let options = {
+            series: [{
+                name: 'Monthly Revenue',
+                data: amounts
+            }],
+            chart: {
+                type: 'area',
+                height: '100%',
+                background: 'transparent',
+                foreColor: '#94a3b8',
+                toolbar: {
+                    show: false
+                }
+            },
+            colors: ['#8b5cf6'],
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.45,
+                    opacityTo: 0.05,
+                    stops: [0, 95]
+                }
+            },
+            grid: {
+                borderColor: '#1e293b',
+                strokeDashArray: 4,
+                xaxis: {
+                    lines: {
+                        show: false
+                    }
+                }
+            },
+            xaxis: {
+                categories: months,
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                }
+            },
+            yaxis: {
+                tickAmount: 4,
+                labels: {
+                    formatter: function(val) {
+                        return 'Rs. ' + val;
+                    }
+                }
+            },
+            tooltip: {
+                theme: 'dark'
+            }
+        };
+
+        let chart = new ApexCharts(document.querySelector("#vendor-sales-chart"), options);
+        chart.render();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lumio - Online Shopping Marketplace{% endblock %}
+
+{% block content %}
+<div x-data="{
+    layoutView: 'grid',
+    activeCategory: '{{ active_category.slug|default:'' }}',
+    searchQuery: '{{ search_query|default:'' }}',
+    vendorId: '{{ active_vendor|default:'' }}',
+    minPrice: '{{ min_price|default:'' }}',
+    maxPrice: '{{ max_price|default:'' }}',
+    minRating: '{{ min_rating|default:'' }}',
+    inStock: {% if in_stock == 'true' %}true{% else %}false{% endif %},
+    sortBy: '{{ sort_by|default:'newest' }}',
+    isLoading: false,
+    
+    updateCatalog() {
+        this.isLoading = true;
+        let url = new URL(window.location.origin + '{% url 'catalog' %}');
+        if (this.activeCategory) url.searchParams.append('category', this.activeCategory);
+        if (this.searchQuery) url.searchParams.append('search', this.searchQuery);
+        if (this.vendorId) url.searchParams.append('vendor', this.vendorId);
+        if (this.minPrice) url.searchParams.append('min_price', this.minPrice);
+        if (this.maxPrice) url.searchParams.append('max_price', this.maxPrice);
+        if (this.minRating) url.searchParams.append('rating', this.minRating);
+        if (this.inStock) url.searchParams.append('in_stock', 'true');
+        url.searchParams.append('sort', this.sortBy);
+        url.searchParams.append('partial', 'true');
+        
+        // Push state to browser URL bar without reloading
+        let displayUrl = new URL(url.toString());
+        displayUrl.searchParams.delete('partial');
+        window.history.pushState({}, '', displayUrl.toString());
+
+        fetch(url.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('catalog-grid-container').innerHTML = html;
+            lucide.createIcons();
+            this.isLoading = false;
+        })
+        .catch(err => {
+            console.error(err);
+            this.isLoading = false;
+        });
+    }
+}">
+
+    <!-- Section 1: Hero Carousel Banners -->
+    <section class="relative w-full rounded-3xl overflow-hidden mb-12 border border-white/10 shadow-2xl bg-slate-950" 
+             x-data="{ 
+                 activeSlide: 0, 
+                 slidesCount: 3, 
+                 timer: null,
+                 startAutoPlay() {
+                     this.timer = setInterval(() => {
+                         this.activeSlide = (this.activeSlide + 1) % this.slidesCount;
+                     }, 5000);
+                 },
+                 stopAutoPlay() {
+                     clearInterval(this.timer);
+                 }
+             }"
+             x-init="startAutoPlay()"
+             @mouseenter="stopAutoPlay()"
+             @mouseleave="startAutoPlay()">
+        
+        <!-- Slide track -->
+        <div class="relative h-[280px] md:h-[420px] transition-transform duration-700 ease-in-out">
+            
+            <!-- Slide 1 -->
+            <div x-show="activeSlide === 0" x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 class="absolute inset-0 bg-cover bg-center flex items-center px-8 md:px-16" 
+                 style="background-image: linear-gradient(to right, rgba(244, 247, 252, 0.95) 45%, rgba(244, 247, 252, 0.3)), url('https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=1200&q=80');">
+                <div class="max-w-lg text-left">
+                    <span class="inline-block bg-brandPurple/10 border border-brandPurple/20 text-brandPurple text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-4 animate-pulse">Electronics</span>
+                    <h1 class="text-3xl md:text-5xl font-black text-slate-900 leading-tight mb-4 tracking-tight">Phones, Audio and Daily Gadgets</h1>
+                    <p class="text-xs md:text-sm text-slate-700 mb-6 leading-relaxed">Shop useful electronics like headphones, speakers, chargers, power banks, smart watches, and webcams.</p>
+                    <a href="#catalog-listing" class="inline-flex items-center gap-2 bg-brandPurple hover:bg-brandPurple/90 text-white text-xs font-black px-6 py-3 rounded-xl transition-all hover:shadow-neon">
+                        SHOP ELECTRONICS <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div x-show="activeSlide === 1" x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 class="absolute inset-0 bg-cover bg-center flex items-center px-8 md:px-16" 
+                 style="background-image: linear-gradient(to right, rgba(244, 247, 252, 0.95) 45%, rgba(244, 247, 252, 0.3)), url('https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80');">
+                <div class="max-w-lg text-left">
+                    <span class="inline-block bg-brandCyan/10 border border-brandCyan/20 text-brandCyan text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-4">Groceries</span>
+                    <h1 class="text-3xl md:text-5xl font-black text-slate-900 leading-tight mb-4 tracking-tight">Daily Kitchen Essentials</h1>
+                    <p class="text-xs md:text-sm text-slate-700 mb-6 leading-relaxed">Find rice, flour, oil, dal, spices, tea, coffee, sugar, salt, and snacks in one place.</p>
+                    <a href="#catalog-listing" class="inline-flex items-center gap-2 bg-brandCyan hover:bg-brandCyan/90 text-white text-xs font-black px-6 py-3 rounded-xl transition-all hover:shadow-neonCyan">
+                        SHOP GROCERIES <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div x-show="activeSlide === 2" x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 class="absolute inset-0 bg-cover bg-center flex items-center px-8 md:px-16" 
+                 style="background-image: linear-gradient(to right, rgba(244, 247, 252, 0.95) 45%, rgba(244, 247, 252, 0.3)), url('https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&w=1200&q=80');">
+                <div class="max-w-lg text-left">
+                    <span class="inline-block bg-brandPink/10 border border-brandPink/20 text-brandPink text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-4">Clothing and Toys</span>
+                    <h1 class="text-3xl md:text-5xl font-black text-slate-900 leading-tight mb-4 tracking-tight">Clothes, Toys and Family Items</h1>
+                    <p class="text-xs md:text-sm text-slate-700 mb-6 leading-relaxed">Browse men's clothing, women's clothing, kids' toys, games, puzzles, and everyday family products.</p>
+                    <a href="#catalog-listing" class="inline-flex items-center gap-2 bg-gradient-to-r from-brandPurple to-brandPink hover:from-brandPurple hover:to-brandPink/95 text-white text-xs font-black px-6 py-3 rounded-xl transition-all">
+                        BROWSE PRODUCTS <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide Indicators -->
+        <div class="absolute bottom-5 right-8 flex gap-2">
+            <template x-for="(s, index) in slidesCount">
+                <button @click="activeSlide = index" 
+                        class="w-8 h-1.5 rounded-full transition-all duration-300"
+                        :class="activeSlide === index ? 'bg-brandPurple w-12 shadow-neon' : 'bg-white/20'"></button>
+            </template>
+        </div>
+    </section>
+
+    <!-- Section 2: Quick Features & Category Grids -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {% for cat in categories %}
+            <a href="{% url 'catalog' %}?category={{ cat.slug }}" 
+               class="p-5 rounded-2xl bg-cardBg border border-white/5 hover:border-brandPurple/30 transition-all group relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-brandPurple/5 rounded-full blur-2xl group-hover:bg-brandPurple/15 transition-all"></div>
+                
+                <div class="p-3 bg-white/5 border border-white/5 rounded-xl w-fit group-hover:bg-brandPurple/15 transition-colors">
+                    {% if forloop.counter == 1 %}
+                        <i data-lucide="headphones" class="w-5 h-5 text-brandPurple"></i>
+                    {% elif forloop.counter == 2 %}
+                        <i data-lucide="box" class="w-5 h-5 text-brandCyan"></i>
+                    {% elif forloop.counter == 3 %}
+                        <i data-lucide="keyboard" class="w-5 h-5 text-brandPink"></i>
+                    {% else %}
+                        <i data-lucide="briefcase" class="w-5 h-5 text-amber-400"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h4 class="text-sm font-extrabold text-white group-hover:text-brandPurple transition-colors" style="margin-top: 1rem;">{{ cat.name }}</h4>
+                    <p class="text-[10px] text-slate-400 mt-1 line-clamp-1">{{ cat.description }}</p>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Section 3: Deals of the Day (Flash Sales with Timer) -->
+    <section class="p-8 rounded-3xl bg-gradient-to-r from-indigo-950/60 to-purple-950/40 border border-white/10 mb-12 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-brandPurple/10 via-transparent to-transparent"></div>
+        <div class="relative z-10 text-center lg:text-left">
+            <span class="inline-flex items-center gap-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider mb-4 animate-pulse">
+                <i data-lucide="zap" class="w-3.5 h-3.5 fill-rose-400"></i> DEAL OF THE DAY
+            </span>
+            <h2 class="text-3xl font-black text-white leading-tight mb-2 tracking-tight">Save up to 35% on Popular Electronics</h2>
+            <p class="text-xs text-slate-300 max-w-md leading-relaxed mb-6">Useful daily electronics and accessories are discounted for a limited time.</p>
+            
+            <!-- Countdown Timer -->
+            <div class="flex justify-center lg:justify-start items-center gap-3" 
+                 x-data="{ 
+                     hours: '05', 
+                     minutes: '42', 
+                     seconds: '18',
+                     updateTimer() {
+                         let target = new Date();
+                         target.setHours(target.getHours() + 5);
+                         setInterval(() => {
+                             let now = new Date();
+                             let diff = target - now;
+                             if (diff <= 0) diff = 18000000; // loop back to 5 hrs
+                             let h = Math.floor(diff / 3600000);
+                             let m = Math.floor((diff % 3600000) / 60000);
+                             let s = Math.floor((diff % 60000) / 1000);
+                             this.hours = String(h).padStart(2, '0');
+                             this.minutes = String(m).padStart(2, '0');
+                             this.seconds = String(s).padStart(2, '0');
+                         }, 1000);
+                     }
+                 }" 
+                 x-init="updateTimer()">
+                <div class="bg-darkBg/80 border border-white/10 rounded-xl px-4 py-2.5 text-center min-w-[60px] shadow-lg">
+                    <div class="text-lg font-black text-brandPurple tracking-tight" x-text="hours">00</div>
+                    <div class="text-[8px] uppercase font-black text-slate-500 tracking-wider">Hrs</div>
+                </div>
+                <span class="text-xl font-black text-slate-500">:</span>
+                <div class="bg-darkBg/80 border border-white/10 rounded-xl px-4 py-2.5 text-center min-w-[60px] shadow-lg">
+                    <div class="text-lg font-black text-brandCyan tracking-tight" x-text="minutes">00</div>
+                    <div class="text-[8px] uppercase font-black text-slate-500 tracking-wider">Min</div>
+                </div>
+                <span class="text-xl font-black text-slate-500">:</span>
+                <div class="bg-darkBg/80 border border-white/10 rounded-xl px-4 py-2.5 text-center min-w-[60px] shadow-lg">
+                    <div class="text-lg font-black text-brandPink tracking-tight" x-text="seconds">00</div>
+                    <div class="text-[8px] uppercase font-black text-slate-500 tracking-wider">Sec</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Deal Item Display card -->
+        <div class="w-full max-w-[340px] bg-slate-900/10 backdrop-blur-md border border-slate-200/60 rounded-2xl p-5 relative z-10 shadow-2xl">
+            <div class="relative bg-white rounded-xl overflow-hidden aspect-[4/3] mb-4 border border-slate-200/40">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80" alt="" class="w-full h-full object-cover">
+                <span class="absolute top-2.5 left-2.5 bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">-35% OFF</span>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[9px] font-bold text-brandPurple uppercase tracking-wider">Electronics Hub</span>
+                <div class="flex items-center gap-0.5"><i data-lucide="star" class="w-3 h-3 text-amber-400 fill-amber-400"></i><span class="text-xs font-bold text-slate-700">4.9</span></div>
+            </div>
+            <h4 class="text-sm font-extrabold text-slate-800 mb-3">Wireless Bluetooth Headphones</h4>
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-base font-black text-slate-800">Rs. 1949.00</span>
+                    <span class="text-xs text-slate-500 line-through ml-1.5">Rs. 2999.00</span>
+                </div>
+                <a href="/product/wireless-bluetooth-headphones/" class="bg-brandPurple hover:bg-brandPurple/95 hover:shadow-neon text-white text-xs font-extrabold px-4 py-2 rounded-xl transition-all">
+                    GET DEAL
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Live Catalog Filters & Product Listing -->
+    <div id="catalog-listing" class="scroll-mt-24"></div>
+
+    <div class="flex flex-col lg:flex-row gap-8 mt-12">
+        <!-- Sidebar Filters panel -->
+        <aside class="w-full lg:w-72 flex-shrink-0 space-y-6">
+            <div class="glass-panel border border-white/10 rounded-2xl p-6 space-y-6 sticky top-24">
+                <div class="flex items-center justify-between border-b border-white/5 pb-4">
+                    <h3 class="font-extrabold text-white text-sm flex items-center gap-2">
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brandPurple"></i> Catalog Filters
+                    </h3>
+                    <button class="text-xs font-bold text-slate-400 hover:text-brandPurple transition-colors"
+                            @click="activeCategory=''; searchQuery=''; vendorId=''; minPrice=''; maxPrice=''; minRating=''; inStock=false; updateCatalog()">
+                        Reset All
+                    </button>
+                </div>
+
+                <!-- Category pills checklist filter -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-300">Category Selection</h4>
+                    <div class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+                        <button class="text-left text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center justify-between"
+                                :class="activeCategory === '' ? 'bg-brandPurple text-white shadow-neon' : 'bg-white/5 text-slate-300 hover:bg-white/10'"
+                                @click="activeCategory = ''; updateCatalog()">
+                            <span>All Categories</span>
+                            <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                        </button>
+                        {% for cat in categories %}
+                            <button class="text-left text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center justify-between"
+                                    :class="activeCategory === '{{ cat.slug }}' ? 'bg-brandPurple text-white shadow-neon' : 'bg-white/5 text-slate-300 hover:bg-white/10'"
+                                    @click="activeCategory = '{{ cat.slug }}'; updateCatalog()">
+                                <span>{{ cat.name }}</span>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-40"></i>
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-slate-350">Price Bounds (INR)</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" placeholder="Min" class="w-full bg-slate-100 text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-brandPurple outline-none"
+                               x-model="minPrice" @input.debounce.500ms="updateCatalog()">
+                        <input type="number" placeholder="Max" class="w-full bg-slate-100 text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-brandPurple outline-none"
+                               x-model="maxPrice" @input.debounce.500ms="updateCatalog()">
+                    </div>
+                </div>
+
+                <!-- Vendor Selector -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-300">Listed Merchants</h4>
+                    <div class="flex flex-col gap-1.5">
+                        <button class="text-left text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center justify-between"
+                                :class="vendorId === '' ? 'bg-white/10 text-white' : 'bg-white/5 text-slate-400 hover:bg-white/10'"
+                                @click="vendorId = ''; updateCatalog()">
+                            <span>All Vendors</span>
+                        </button>
+                        {% for v in vendors %}
+                            <button class="text-left text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center justify-between"
+                                    :class="vendorId === '{{ v.id }}' ? 'bg-brandPurple text-white shadow-neon' : 'bg-white/5 text-slate-300 hover:bg-white/10'"
+                                    @click="vendorId = '{{ v.id }}'; updateCatalog()">
+                                <span>{{ v.store_name }}</span>
+                                <span class="text-[9px] uppercase bg-black/40 px-2 py-0.5 rounded text-slate-400 border border-white/5 font-black">Verify</span>
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Star Ratings Filter -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-300">Minimum Rating</h4>
+                    <div class="flex flex-col gap-1">
+                        <button class="flex items-center gap-2 text-left text-xs px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                                :class="minRating === '4' ? 'text-brandPurple font-bold' : 'text-slate-300'"
+                                @click="minRating = (minRating === '4' ? '' : '4'); updateCatalog()">
+                            <span class="flex gap-0.5 text-amber-400">
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-slate-700"></i>
+                            </span>
+                            <span>4 &amp; Up</span>
+                        </button>
+                        <button class="flex items-center gap-2 text-left text-xs px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                                :class="minRating === '3' ? 'text-brandPurple font-bold' : 'text-slate-300'"
+                                @click="minRating = (minRating === '3' ? '' : '3'); updateCatalog()">
+                            <span class="flex gap-0.5 text-amber-400">
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-slate-700"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-slate-700"></i>
+                            </span>
+                            <span>3 &amp; Up</span>
+                        </button>
+                        <button class="flex items-center gap-2 text-left text-xs px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                                :class="minRating === '2' ? 'text-brandPurple font-bold' : 'text-slate-300'"
+                                @click="minRating = (minRating === '2' ? '' : '2'); updateCatalog()">
+                            <span class="flex gap-0.5 text-amber-400">
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-slate-700"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-slate-700"></i>
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-slate-700"></i>
+                            </span>
+                            <span>2 &amp; Up</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stock availability toggle -->
+                <div class="flex items-center justify-between border-t border-white/5 pt-4">
+                    <span class="text-xs font-bold text-slate-300">Exclude Sold Out</span>
+                    <button class="w-10 h-6 rounded-full p-0.5 transition-colors relative flex items-center"
+                            :class="inStock ? 'bg-brandPurple' : 'bg-slate-800'"
+                            @click="inStock = !inStock; updateCatalog()">
+                        <span class="w-5 h-5 rounded-full bg-white transition-all shadow-md transform"
+                              :class="inStock ? 'translate-x-4' : 'translate-x-0'"></span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Side Products Grid Area -->
+        <section class="flex-grow space-y-6">
+            <!-- Catalog Header (Sorting / Layout selectors) -->
+            <div class="flex items-center justify-between flex-wrap gap-4 bg-cardBg/60 border border-white/5 rounded-2xl p-4">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-lg font-black text-white">Collections Grid</h2>
+                    <span class="text-xs text-slate-400" x-show="isLoading">(Updating...)</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <!-- Sort control -->
+                    <div class="flex items-center gap-2">
+                        <label for="sort_select" class="text-xs font-bold text-slate-400 uppercase">Sort</label>
+                        <select id="sort_select" class="bg-darkBg text-slate-200 border border-white/10 rounded-xl px-3 py-1.5 text-xs focus:border-brandPurple outline-none"
+                                x-model="sortBy" @change="updateCatalog()">
+                            <option value="newest">New Arrivals</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                            <option value="rating">Top Rated</option>
+                        </select>
+                    </div>
+
+                    <!-- Layout view toggle controls -->
+                    <div class="flex items-center border border-white/10 rounded-xl overflow-hidden p-0.5 bg-darkBg">
+                        <button class="p-1.5 rounded-lg flex items-center justify-center transition-colors"
+                                :class="layoutView === 'grid' ? 'bg-brandPurple text-white' : 'text-slate-400 hover:text-white'"
+                                @click="layoutView = 'grid'">
+                            <i data-lucide="grid" class="w-4 h-4"></i>
+                        </button>
+                        <button class="p-1.5 rounded-lg flex items-center justify-center transition-colors"
+                                :class="layoutView === 'list' ? 'bg-brandPurple text-white' : 'text-slate-400 hover:text-white'"
+                                @click="layoutView = 'list'">
+                            <i data-lucide="list" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loader Skeleton -->
+            <div x-show="isLoading" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <template x-for="i in 4">
+                        <div class="bg-cardBg border border-white/5 rounded-2xl p-4 space-y-4 animate-pulse">
+                            <div class="bg-slate-900 rounded-xl aspect-[4/3]"></div>
+                            <div class="h-4 bg-slate-900 rounded-full w-2/3"></div>
+                            <div class="h-3 bg-slate-900 rounded-full w-full"></div>
+                            <div class="h-6 bg-slate-900 rounded-xl w-1/3 pt-3"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Active Products Grid wrapper -->
+            <div id="catalog-grid-container" x-show="!isLoading">
+                {% include 'partials/product_grid.html' %}
+            </div>
+        </section>
+    </div>
+
+</div>
+{% endblock %}

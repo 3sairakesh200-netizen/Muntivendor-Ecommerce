@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Bag - Lumio{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl md:text-3xl font-black text-white mb-8 flex items-center gap-3">
+    <i data-lucide="shopping-bag" class="w-7 h-7 text-brandPurple"></i> Shopping Cart
+</h1>
+
+{% if cart %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left: Cart Items list -->
+        <div class="lg:col-span-8 space-y-4">
+            <div class="p-6 md:p-8 rounded-2xl bg-cardBg border border-white/5 space-y-6">
+                {% for item in cart %}
+                    {% with product=item.product %}
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/5 last:pb-0 last:border-b-0">
+                            <!-- Image & Details -->
+                            <div class="flex items-center gap-4">
+                                <img src="{{ product.image_url }}" alt="" class="w-16 h-16 rounded-xl object-cover border border-white/10 flex-shrink-0">
+                                <div>
+                                    <h3 class="text-sm font-extrabold text-white hover:text-brandPurple transition-colors leading-snug">
+                                        <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
+                                    </h3>
+                                    <span class="text-[10px] text-slate-500 font-bold block mt-1">
+                                        Sold by: <strong class="text-brandCyan">{{ product.vendor.store_name }}</strong>
+                                    </span>
+                                    <span class="text-xs text-slate-400 font-extrabold mt-1.5 block">Rs. {{ item.price }} <span class="text-[9px] text-slate-500 font-medium font-sans">/ unit</span></span>
+                                </div>
+                            </div>
+
+                            <!-- Update Qty & Total Price -->
+                            <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
+                                <form action="{% url 'cart_add' product.id %}" method="post" class="flex items-center">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="override" value="True">
+                                    <div class="relative bg-darkBg border border-white/10 rounded-xl px-2.5 py-1">
+                                        <label for="qty_select_{{ product.id }}" class="sr-only">Quantity</label>
+                                        <select id="qty_select_{{ product.id }}" name="quantity" onchange="this.form.submit()" 
+                                                class="bg-transparent text-slate-200 text-xs font-bold focus:outline-none cursor-pointer outline-none">
+                                            {% for idx in "x"|ljust:product.stock %}
+                                                <option value="{{ forloop.counter }}" {% if item.quantity == forloop.counter %}selected{% endif %}>
+                                                    {{ forloop.counter }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </form>
+
+                                <div class="text-right min-w-[80px]">
+                                    <div class="text-sm font-black text-white">Rs. {{ item.total_price }}</div>
+                                    <a href="{% url 'cart_remove' product.id %}" class="inline-flex items-center gap-0.5 text-[10px] font-bold text-rose-400 hover:text-rose-300 transition-colors mt-1">
+                                        <i data-lucide="trash-2" class="w-3 h-3"></i> Remove
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right: Checkout details summary card -->
+        <div class="lg:col-span-4">
+            <div class="p-6 rounded-2xl glass-panel border border-white/10 space-y-6">
+                <h3 class="text-sm font-extrabold text-white border-b border-white/5 pb-3">
+                    Order Summary
+                </h3>
+
+                <div class="space-y-3.5 text-xs font-bold text-slate-400">
+                    <div class="flex justify-between">
+                        <span>Items Total</span>
+                        <span class="text-white">Rs. {{ cart.get_total_price }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Shipping Hub Delivery</span>
+                        <span class="text-brandCyan font-black uppercase">Free</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-white border-t border-white/5 pt-4 font-black">
+                        <span>Estimated Total</span>
+                        <span class="text-brandPurple">Rs. {{ cart.get_total_price }}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5 pt-2">
+                    <a href="{% url 'checkout' %}" class="w-full bg-brandPurple hover:bg-brandPurple/95 text-white font-extrabold text-xs py-3 rounded-xl transition-all hover:shadow-neon flex items-center justify-center gap-2">
+                        <i data-lucide="lock" class="w-4 h-4"></i> PROCEED TO CHECKOUT
+                    </a>
+                    
+                    <a href="{% url 'catalog' %}" class="w-full bg-white/5 hover:bg-white/10 text-slate-300 font-extrabold text-xs py-3 rounded-xl transition-all border border-white/5 flex items-center justify-center gap-1.5">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> CONTINUE SHOPPING
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center py-16 px-4 bg-cardBg border border-white/5 rounded-2xl max-w-xl mx-auto shadow-2xl">
+        <div class="w-16 h-16 bg-slate-900 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="shopping-bag" class="w-7 h-7 text-slate-500"></i>
+        </div>
+        <h3 class="text-lg font-extrabold text-white mb-1">Your cart is empty</h3>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto mb-6">Browse everyday products and add what you need to your cart.</p>
+        <a href="{% url 'catalog' %}" class="inline-flex items-center gap-2 bg-brandPurple hover:bg-brandPurple/90 hover:shadow-neon text-white text-xs font-black px-6 py-3 rounded-xl transition-all">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> BROWSE CATALOG
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

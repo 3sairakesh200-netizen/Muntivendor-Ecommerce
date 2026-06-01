@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Placed Successfully - Lumio{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-cardBg border border-white/10 rounded-3xl p-8 md:p-12 text-center shadow-2xl relative overflow-hidden">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-brandPurple/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Beautiful Glowing Check Success Ring -->
+    <div class="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-neonCyan animate-pulse">
+        <i data-lucide="check" class="w-10 h-10 text-emerald-400"></i>
+    </div>
+    
+    <h1 class="text-3xl font-black text-white leading-tight mb-2 tracking-tight">Secure Order Placed!</h1>
+    <p class="text-xs text-slate-400 max-w-sm mx-auto mb-8 leading-relaxed">Your order has been placed successfully. You can monitor progress on your buyer dashboard.</p>
+    
+    <!-- Receipt summary -->
+    <div class="bg-darkBg/60 border border-white/5 rounded-2xl p-6 text-left mb-8 space-y-4">
+        <div class="flex items-center justify-between border-b border-white/5 pb-3 text-xs">
+            <div>
+                <span class="text-slate-500 font-bold uppercase tracking-wider">Order Reference</span>
+                <span class="font-extrabold text-white ml-1">#{{ order.id }}</span>
+            </div>
+            <div>
+                <span class="text-slate-500 font-bold uppercase tracking-wider">Date</span>
+                <span class="font-bold text-white ml-1">{{ order.created_at|date:"M d, Y" }}</span>
+            </div>
+        </div>
+
+        <div>
+            <h4 class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">Shipping Destination</h4>
+            <p class="text-xs text-slate-200 leading-relaxed">
+                <strong class="text-white">{{ order.first_name }} {{ order.last_name }}</strong><br>
+                {{ order.address }}<br>
+                {{ order.city }}, {{ order.postal_code }} &bull; {{ order.country }}
+            </p>
+        </div>
+
+        <div class="border-t border-white/5 pt-4">
+            <h4 class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2.5">Items Purchased</h4>
+            <div class="space-y-2">
+                {% for item in order.items.all %}
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">{{ item.product.name }} <strong class="text-slate-500 text-[10px]">x{{ item.quantity }}</strong></span>
+                        <span class="font-bold text-white">Rs. {{ item.get_cost }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center border-t border-white/5 pt-4 mt-2">
+            <span class="text-xs font-bold text-slate-400">Total Charged</span>
+            <span class="text-base font-black text-brandCyan">Rs. {{ order.total_amount }}</span>
+        </div>
+    </div>
+
+    <!-- Navigation buttons -->
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="{% url 'customer_dashboard' %}" class="bg-brandPurple hover:bg-brandPurple/90 text-white font-extrabold text-xs px-6 py-3 rounded-xl transition-all hover:shadow-neon flex items-center justify-center gap-2">
+            <i data-lucide="layout" class="w-4 h-4"></i> MY CUSTOMER DASHBOARD
+        </a>
+        <a href="{% url 'catalog' %}" class="bg-white/5 hover:bg-white/10 text-slate-300 font-extrabold text-xs px-6 py-3 rounded-xl transition-all border border-white/5 flex items-center justify-center gap-1.5">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> BACK TO CATALOG
+        </a>
+    </div>
+</div>
+{% endblock %}

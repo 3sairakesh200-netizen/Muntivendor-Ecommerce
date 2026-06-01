@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Orders - Lumio{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- Left Sidebar Menu -->
+    <aside class="lg:col-span-3 bg-cardBg border border-white/5 rounded-2xl p-5 space-y-4">
+        <div class="text-center pb-4 border-b border-white/5">
+            <img src="{{ user.vendor_profile.logo_url|default:'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&h=400&q=80' }}" 
+                 alt="" class="w-16 h-16 rounded-2xl object-cover border-2 border-brandPurple mx-auto mb-3">
+            <h4 class="font-extrabold text-white text-base leading-tight">{{ user.vendor_profile.store_name }}</h4>
+            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-[8px] font-black uppercase tracking-wider mt-1.5">
+                <i data-lucide="shield-check" class="w-2.5 h-2.5"></i> APPROVED SELLER
+            </span>
+        </div>
+
+        <nav class="flex flex-col gap-1">
+            <a href="{% url 'dashboard_home' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Analytics Dashboard
+            </a>
+            <a href="{% url 'dashboard_products' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-brandCyan"></i> My Products
+            </a>
+            <a href="{% url 'dashboard_orders' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left bg-brandPurple text-white shadow-neon">
+                <i data-lucide="package" class="w-4 h-4 text-brandPink"></i> Fulfillments
+            </a>
+            {% if user.is_superuser %}
+                <a href="{% url 'admin_dashboard' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i> Platform Control
+                </a>
+            {% endif %}
+            <div class="h-[1px] bg-white/5 my-1.5"></div>
+            <a href="{% url 'catalog' %}" class="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold text-left text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Exit to Catalog
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Right Fulfillments panel -->
+    <section class="lg:col-span-9 space-y-6">
+        
+        <div class="border-b border-white/5 pb-4">
+            <h1 class="text-xl md:text-2xl font-black text-white">Fulfillments Queue</h1>
+            <p class="text-xs text-slate-400 mt-1">Monitor purchases, update delivery status, and coordinate shipments.</p>
+        </div>
+
+        {% if order_items %}
+            <div class="p-6 rounded-2xl bg-cardBg border border-white/5">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5 text-slate-500 font-bold uppercase tracking-wider">
+                                <th class="pb-3 pr-4">Order ID</th>
+                                <th class="pb-3 px-4">Product</th>
+                                <th class="pb-3 px-4">Customer Details</th>
+                                <th class="pb-3 px-4">Revenue</th>
+                                <th class="pb-3 px-4">Fulfillment Status</th>
+                                <th class="pb-3 pl-4 text-right">Update Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for item in order_items %}
+                                <tr>
+                                    <td class="py-3.5 pr-4 text-white font-extrabold text-sm">
+                                        #{{ item.order.id }}
+                                        <span class="block text-[9px] text-slate-500 font-semibold mt-1">{{ item.order.created_at|date:"M d, Y" }}</span>
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="{{ item.product.image_url }}" alt="" class="w-10 h-10 object-cover rounded-xl border border-white/10">
+                                            <div>
+                                                <span class="font-extrabold text-slate-200 block text-xs">{{ item.product.name }}</span>
+                                                <span class="text-[9px] text-slate-500 font-bold block mt-0.5">
+                                                    Quantity: {{ item.quantity }}
+                                                    {% if item.selected_size %}&bull; Size: {{ item.selected_size }}{% endif %}
+                                                    {% if item.selected_color %}&bull; Style: {{ item.selected_color }}{% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3.5 px-4 leading-relaxed text-[11px] text-slate-400">
+                                        <strong class="text-white block">{{ item.order.first_name }} {{ item.order.last_name }}</strong>
+                                        {{ item.order.address }}, {{ item.order.city }}<br>
+                                        {{ item.order.postal_code }} &bull; {{ item.order.email }}
+                                    </td>
+                                    <td class="py-3.5 px-4 font-black text-white text-sm">Rs. {{ item.get_cost }}</td>
+                                    <td class="py-3.5 px-4">
+                                        {% if item.status == 'PENDING' %}
+                                            <span class="inline-block px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Pending</span>
+                                        {% elif item.status == 'PROCESSING' %}
+                                            <span class="inline-block px-2 py-0.5 bg-brandCyan/10 border border-brandCyan/20 text-brandCyan rounded-lg text-[9px] font-bold uppercase tracking-wide">Processing</span>
+                                        {% elif item.status == 'SHIPPED' %}
+                                            <span class="inline-block px-2 py-0.5 bg-brandPurple/10 border border-brandPurple/20 text-brandPurple rounded-lg text-[9px] font-bold uppercase tracking-wide">Shipped</span>
+                                        {% elif item.status == 'DELIVERED' %}
+                                            <span class="inline-block px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Delivered</span>
+                                        {% elif item.status == 'REFUND_REQUESTED' %}
+                                            <span class="inline-block px-2 py-0.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-[9px] font-bold uppercase tracking-wide animate-pulse">Refund Requested</span>
+                                        {% elif item.status == 'REFUNDED' %}
+                                            <span class="inline-block px-2 py-0.5 bg-slate-800 border border-white/10 text-slate-400 rounded-lg text-[9px] font-bold uppercase tracking-wide">Refunded</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3.5 pl-4 text-right">
+                                        <form method="post" class="flex items-center justify-end gap-1.5">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                                            <select name="status" class="bg-darkBg text-slate-200 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs focus:border-brandPurple outline-none max-w-[110px] cursor-pointer">
+                                                <option value="PENDING" {% if item.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                                                <option value="PROCESSING" {% if item.status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                                                <option value="SHIPPED" {% if item.status == 'SHIPPED' %}selected{% endif %}>Shipped</option>
+                                                <option value="DELIVERED" {% if item.status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                                                <option value="REFUND_REQUESTED" {% if item.status == 'REFUND_REQUESTED' %}selected{% endif %}>Refund Req.</option>
+                                                <option value="REFUNDED" {% if item.status == 'REFUNDED' %}selected{% endif %}>Refunded</option>
+                                            </select>
+                                            <button type="submit" class="bg-brandPurple/10 hover:bg-brandPurple text-brandPurple hover:text-white p-2 rounded-xl border border-brandPurple/20 hover:shadow-neon transition-all" title="Update Status">
+                                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-16 px-4 bg-cardBg border border-white/5 rounded-2xl shadow-2xl">
+                <div class="w-16 h-16 bg-slate-900 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="package" class="w-7 h-7 text-slate-500"></i>
+                </div>
+                <h3 class="text-lg font-extrabold text-white mb-1">No orders received yet</h3>
+                <p class="text-xs text-slate-400 max-w-sm mx-auto mb-6">Maintain high quality item descriptions. When buyers complete escrow checkout, their items appear in this fulfillments queue.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
