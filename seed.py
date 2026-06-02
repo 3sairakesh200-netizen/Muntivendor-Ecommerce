@@ -13,6 +13,11 @@ User = get_user_model()
 
 
 def seed_database():
+    force_seed = os.environ.get("FORCE_SEED", "False").lower() == "true"
+    if Product.objects.exists() and not force_seed:
+        print("Products already exist. Skipping database seeding.")
+        return
+
     print("Starting database seeding with 50 general products...")
 
     Review.objects.all().delete()
