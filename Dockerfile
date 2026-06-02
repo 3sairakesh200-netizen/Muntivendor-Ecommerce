@@ -52,6 +52,5 @@ RUN DJANGO_SECRET_KEY=dummy-secret-key-12345 DJANGO_DEBUG=False python manage.py
 # Expose port
 EXPOSE 8000
 
-# Start server using high performance Gunicorn server
-CMD ["gunicorn", "multivendor.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
-
+# Apply database migrations, then start the Gunicorn server
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn multivendor.wsgi:application --bind 0.0.0.0:8000 --workers 3"]
