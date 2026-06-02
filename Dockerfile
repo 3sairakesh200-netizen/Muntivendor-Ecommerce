@@ -1,10 +1,9 @@
-# Multi-stage Python build for production readiness
+
 FROM python:3.12-slim AS builder
 
-# Setup build directories
 WORKDIR /app
 
-# Set env configurations
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
