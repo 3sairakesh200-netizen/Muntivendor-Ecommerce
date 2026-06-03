@@ -412,3 +412,16 @@
 
 </div>
 {% endblock %}
+
+{% block extra_js %}
+{% if search_query %}
+<script>
+    window.addEventListener("load", () => {
+        const listing = document.getElementById("catalog-listing");
+        if (listing && !window.location.hash) {
+            listing.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

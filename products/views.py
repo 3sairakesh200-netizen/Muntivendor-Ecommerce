@@ -84,6 +84,15 @@ def catalog(request):
     else:  # newest
         products = products.order_by('-created_at')
 
+    is_partial_request = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('partial') == 'true'
+    has_extra_filters = any([category_slug, vendor_id, min_price, max_price, min_rating, in_stock == 'true'])
+    if search_query and not has_extra_filters and not is_partial_request:
+        exact_product = products.filter(name__iexact=search_query).first()
+        if exact_product:
+            return redirect('product_detail', slug=exact_product.slug)
+        if products.count() == 1:
+            return redirect('product_detail', slug=products.first().slug)
+
     # Fetch unique vendors for the filter sidebar
     vendors = VendorProfile.objects.filter(status='APPROVED').order_by('store_name')
 
@@ -102,10 +111,16 @@ def catalog(request):
     }
     
     # Check if AJAX partial page request
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('partial') == 'true':
+    if is_partial_request:
         return render(request, 'partials/product_grid.html', context)
         
     return render(request, 'landing.html', context)
+
+def privacy_policy(request):
+    return render(request, 'privacy.html')
+
+def terms_page(request):
+    return render(request, 'terms.html')
 
 def product_detail(request, slug):
     product = get_object_or_404(Product.objects.annotate(avg_rating=Avg('reviews__rating')), slug=slug, is_active=True)

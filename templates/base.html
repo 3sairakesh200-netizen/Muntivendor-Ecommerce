@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Lumio - Online Multi-Vendor Store{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/lumio-logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/lumio-logo.png' %}">
     
     <!-- Google Font & Tailwind CSS v3/v4 Play CDN -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,9 +17,6 @@
     <!-- Alpine.js & Lucide Icons -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- GSAP for Smooth Cursor Animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     
     <!-- Custom styles.css Stylesheet -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -40,13 +39,13 @@
                             200: '#DFE5F5',
                             100: '#F1F5FF',
                         },
-                        darkBg: '#0B1020',
-                        cardBg: 'rgba(17, 20, 38, 0.72)',
-                        brandPurple: '#8B5CF6',
+                        darkBg: '#F8FBFF',
+                        cardBg: 'rgba(255, 255, 255, 0.78)',
+                        brandPurple: '#7C3AED',
                         brandCyan: '#06B6D4',
-                        brandPink: '#F43F5E',
-                        brandLime: '#84CC16',
-                        brandAmber: '#F59E0B',
+                        brandPink: '#EC4899',
+                        brandLime: '#10B981',
+                        brandAmber: '#FB923C',
                     },
                     boxShadow: {
                         neon: '0 0 24px rgba(139, 92, 246, 0.38)',
@@ -63,14 +62,9 @@
           sidebarOpen: false, 
           locationModalOpen: false, 
           searchSuggestions: [], 
-          searchQuery: '', 
+          searchQuery: '{{ search_query|default:''|escapejs }}', 
           locationName: localStorage.getItem('user_location') || 'Select Location' 
       }">
-
-    <!-- Custom Animated Cursor Elements -->
-    <div class="cursor-dot" id="cursor-dot"></div>
-    <div class="cursor-outline" id="cursor-outline"></div>
-
     <!-- Shifting Gradient Background Blobs -->
     <div class="bg-gradient-blob-1"></div>
     <div class="bg-gradient-blob-2"></div>
@@ -83,8 +77,11 @@
             <button @click="sidebarOpen = true" class="p-2 hover:bg-white/5 rounded-lg transition-colors flex items-center justify-center border border-white/5 text-slate-300 hover:text-white" aria-label="Open navigation menu">
                 <i data-lucide="menu" class="w-6 h-6"></i>
             </button>
-            <a href="{% url 'catalog' %}" class="flex items-center gap-2 font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-brandPurple bg-clip-text text-transparent">
-                <i data-lucide="sparkles" class="w-6 h-6 text-brandPurple animate-pulse"></i> Lumio
+            <a href="{% url 'catalog' %}" class="brand-logo-link" aria-label="Lumio home">
+                <span class="brand-spark" aria-hidden="true">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </span>
+                <span class="brand-wordmark">LUMIO</span>
             </a>
         </div>
 
@@ -115,7 +112,7 @@
              }"
              @click.away="showSuggestions = false">
             
-            <form method="get" action="{% url 'catalog' %}" class="relative w-full flex">
+            <form method="get" action="{% url 'catalog' %}#catalog-listing" class="relative w-full flex">
                 <div class="relative w-full">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <i data-lucide="search" class="w-5 h-5 text-slate-400"></i>
@@ -269,7 +266,10 @@
             <!-- Sidebar Header -->
             <div class="p-6 bg-darkBg border-b border-white/10 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <i data-lucide="sparkles" class="w-6 h-6 text-brandPurple"></i>
+                    <span class="brand-spark" aria-hidden="true">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </span>
+                    <span class="brand-wordmark sidebar-wordmark">LUMIO</span>
                     <span class="font-extrabold text-lg text-white tracking-wide">Store Navigation</span>
                 </div>
                 <button @click="sidebarOpen = false" class="p-1.5 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors">
@@ -430,57 +430,29 @@
     </main>
 
     <!-- Footer -->
-    <footer class="w-full bg-darkBg border-t border-white/5 py-8 mt-12 text-center text-xs text-slate-500">
-        <div class="max-w-[1400px] mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <a href="{% url 'catalog' %}" class="flex items-center gap-1.5 font-bold tracking-wider text-slate-300 hover:text-white transition-colors">
-                <i data-lucide="sparkles" class="w-4 h-4 text-brandPurple"></i> Lumio
-            </a>
-            <div class="flex items-center gap-6">
+    <footer class="w-full bg-darkBg border-t border-white/5 py-8 mt-12 text-xs text-slate-500">
+        <div class="max-w-[1400px] mx-auto px-8 flex flex-col gap-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+                <a href="{% url 'catalog' %}" class="footer-logo-link" aria-label="Lumio home">
+                    <span class="brand-spark" aria-hidden="true">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    </span>
+                    <span class="brand-wordmark footer-wordmark">LUMIO</span>
+                </a>
+                <div class="flex items-center gap-6 flex-wrap justify-center">
                 <a href="{% url 'catalog' %}" class="hover:text-slate-300 transition-colors">Catalog</a>
                 <a href="{% url 'vendor_register' %}" class="hover:text-slate-300 transition-colors">Become a Vendor</a>
-                <a href="#" class="hover:text-slate-300 transition-colors">Privacy</a>
-                <a href="#" class="hover:text-slate-300 transition-colors">Terms</a>
+                <a href="{% url 'privacy' %}" class="hover:text-slate-300 transition-colors">Privacy</a>
+                <a href="{% url 'terms' %}" class="hover:text-slate-300 transition-colors">Terms</a>
+                </div>
+                <div>&copy; 2026 Lumio. Everyday shopping made simple.</div>
             </div>
-            <div>&copy; 2026 Lumio. Everyday shopping made simple.</div>
         </div>
     </footer>
 
     <!-- Initialize Lucide Icons -->
     <script>
         lucide.createIcons();
-
-        // Custom Cursor Experience with GSAP
-        const cursorDot = document.getElementById("cursor-dot");
-        const cursorOutline = document.getElementById("cursor-outline");
-        
-        if (cursorDot && cursorOutline) {
-            window.addEventListener("mousemove", (e) => {
-                gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0.05 });
-                gsap.to(cursorOutline, { x: e.clientX, y: e.clientY, duration: 0.18 });
-            });
-            
-            // Dynamic hover state delegation
-            document.addEventListener("mouseover", (e) => {
-                if (e.target.closest("a, button, select, input, textarea, [role='button'], .pill, .sidebar-link")) {
-                    document.body.classList.add("cursor-hover");
-                }
-            });
-            document.addEventListener("mouseout", (e) => {
-                if (e.target.closest("a, button, select, input, textarea, [role='button'], .pill, .sidebar-link")) {
-                    document.body.classList.remove("cursor-hover");
-                }
-            });
-            
-            // Click wave effect
-            window.addEventListener("click", (e) => {
-                const wave = document.createElement("div");
-                wave.className = "cursor-click-wave";
-                wave.style.left = e.clientX + "px";
-                wave.style.top = e.clientY + "px";
-                document.body.appendChild(wave);
-                setTimeout(() => wave.remove(), 600);
-            });
-        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>
